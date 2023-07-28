@@ -1,8 +1,8 @@
 import django_filters
+from django import forms
 from django_filters import FilterSet, DateTimeFilter, ModelChoiceFilter
 
-from django import forms
-from .models import Post, Category, PostCategory, Author
+from .models import Post, Category, Author
 
 
 class PostFilter(FilterSet):
@@ -17,6 +17,16 @@ class PostFilter(FilterSet):
         label='Категория',
     )
 
+    author = django_filters.ModelChoiceFilter(field_name='author',
+                                              label='Выбор автора',
+                                              lookup_expr='exact',
+                                              queryset=Author.objects.all())
+
+    class Meta:
+        model = Post
+        fields = {
+            'post_title': ['icontains'],
+        }
     author = django_filters.ModelChoiceFilter(field_name='author',
                                               label='Выбор автора',
                                               lookup_expr='exact',

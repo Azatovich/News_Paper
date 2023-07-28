@@ -4,20 +4,21 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404, render
 from django.urls import reverse_lazy
-from django.views.generic import ListView, DeleteView, CreateView, UpdateView, DetailView
+from django.views.decorators.csrf import csrf_protect
+from django.views.generic import ListView, DeleteView, CreateView, UpdateView, DetailView, TemplateView
 
 from .filters import PostFilter
 from .forms import PostForm
-from .models import Post
+from .models import Post, Category
 
 
 # Create your views here.
 
 class PostsList(ListView):
     model = Post
-    ordering = 'time_comment'
+    ordering = 'created_at'
     template_name = 'news/posts.html'
     context_object_name = 'posts'
     paginate_by = 10
@@ -38,7 +39,7 @@ class PostsList(ListView):
 
 class PostSearch(ListView):
     model = Post
-    ordering = 'time_comment'
+    ordering = 'created_at'
     template_name = 'news/post_search.html'
     context_object_name = 'search'
     paginate_by = 10
@@ -79,10 +80,10 @@ class PostCreate(LoginRequiredMixin, CreateView):
             path_info = self.request.META['PATH_INFO']
             if path_info == '/news/create/':
                 post.post_type = Post.TYPES[1]
-                # Post.POSTS = ['article', 'news_piece']
+
             elif path_info == '/article/create/':
                 post.post_type = Post.TYPES[0]
-                # Post.POSTS = ['article', 'news_piece']
+
             else:
                 raise ValidationError(
                     'PostCreate.from_valid(): Wrong url.'
@@ -133,6 +134,38 @@ def upgrade_me(request):
     return redirect('/')
 
 
-from django.shortcuts import render
+class Profile(LoginRequiredMixin, TemplateView):
+    template_name = 'news/profile.html'
 
-# Create your views here.
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_not_author'] = not self.request.user.groups.filter(name='authors').exists()
+        return context
+
+
+class CategoryListView(ListView):
+    model = Post
+    template_name = 'news/category_list.html'
+    context_object_name = 'category_post_list'
+
+    def get_queryset(self):
+        self.post_category = get_object_or_404(Category, id=self.kwargs['pk'])
+        queryset = Post.objects.filter(post_category=self.post_category).order_by('-created_at')
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_not_subscriber'] = self.request.user not in self.post_category.subscribers.all()
+        context['post_category'] = self.post_category
+        return context
+
+
+@login_required
+@csrf_protect
+def subscribe(request, pk):
+    user = request.user
+    category = Category.objects.get(id=pk)
+    category.subscribers.add(user)
+    message = 'Успешная подписка на рассылку новостей в категории '
+
+    return render(request, 'news/subscribe.html', {'category': category, 'message': message})
