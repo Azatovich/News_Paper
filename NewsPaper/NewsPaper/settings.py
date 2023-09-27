@@ -100,8 +100,13 @@ LOGIN_REDIRECT_URL = "/"
 
 SITE_ID = 1
 
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USERNAME_REQUIRED = True
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
-
+ACCOUNT_FORMS = {'signup': 'news.forms.CommonSignupForm'}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
