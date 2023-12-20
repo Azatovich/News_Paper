@@ -2,7 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Sum
 from django.urls import reverse
-
+from datetime import datetime
+from django.db import models
 
 class Author(models.Model):
 
@@ -101,3 +102,15 @@ class Comment(models.Model):
     def dislike(self):
         self.comment_rating -= 1
         self.save()
+
+class Appointment(models.Model):
+    date = models.DateField(
+        default=datetime.utcnow,
+    )
+    client_name = models.CharField(
+        max_length=200
+    )
+    massege = models.TextField()
+
+    def __str__(self):
+        return f'{self.client_name}: {self.massege}'

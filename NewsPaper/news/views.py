@@ -4,14 +4,16 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
+from django.core.mail import mail_admins
 from django.shortcuts import redirect, get_object_or_404, render
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.decorators.csrf import csrf_protect
 from django.views.generic import ListView, DeleteView, CreateView, UpdateView, DetailView, TemplateView
-
+from django.db.models.signals import post_save
 from .filters import PostFilter
 from .forms import PostForm
-from .models import Post, Category
+from .models import Post, Category, Appointment
 
 
 # Create your views here.
@@ -169,3 +171,24 @@ def subscribe(request, pk):
     message = 'Успешная подписка на рассылку новостей в категории '
 
     return render(request, 'news/subscribe.html', {'category': category, 'message': message})
+
+
+class AppointmentView(View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'make_appointment.html', {})
+
+    def post(self, request, *args, **kwargs):
+        appointment = Appointment(
+            date=datetime.strptime(request.POST['date'], '%Y-%m-%d'),
+            client_name=request.POST['client_name'],
+            message=request.POST['message'],
+        )
+        appointment.save()
+
+        # отправляем письмо всем админам по аналогии с send_mail, только здесь получателя указывать не надо
+        mail_admins(
+            subject=f'{appointment.client_name} {appointment.date.strftime("%d %m %Y")}',
+            message=appointment.message,
+        )
+
+        return redirect('appointments:make_appointment')

@@ -38,16 +38,19 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.flatpages',
 
-
     'news.apps.NewsConfig',
     'accounts',
     'django_filters',
+
+    #'appointment',
+    #'django.contrib.sites',
 
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -152,4 +155,17 @@ STATICFILES_DIRS = [
 
 SITE_URL = 'http://127.0.0.1:8000/'
 
+EMAIL_HOST = 'smtp.yandex.ru'
+EMAIL_PORT = 465
+EMAIL_HOST_USER = 'mmur2k'
+EMAIL_HOST_PASSWORD = 'Zames12345'
+EMAIL_USE_SSL = True
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER + '@yandex.ru'
+ADMINS = [
+    ('Murzik', 'mmur2k@yandex.ru'),
+]
 
+SERVER_EMAIL = 'mmur2k@yandex.ru'
+
+APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
+APSCHEDULER_RUN_NOW_TIMEOUT = 25
